@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowHub 更新</title>
+    <style>
+        :root {
+            --bg-primary: #1e1e2e;
+            --bg-secondary: #282840;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #6366f1;
+            --accent-hover: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .titlebar {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            -webkit-app-region: drag;
+        }
+
+        .titlebar-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+        }
+
+        .titlebar-controls {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .titlebar-button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .titlebar-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .content {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .version-info {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .version-info .current {
+            color: #f59e0b;
+        }
+
+        .version-info .latest {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .release-notes {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .release-notes::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .release-notes::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        .release-notes::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .download-info {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            display: none;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .download-info.active {
+            display: block;
+        }
+
+        .download-progress {
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .download-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .download-details span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: auto;
+        }
+
+        .button {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .button-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .button-secondary {
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--text-primary);
+        }
+
+        .button-secondary:hover:not(:disabled) {
+            background: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .button-tertiary {
+            background: transparent;
+            color: var(--text-secondary);
+        }
+
+        .button-tertiary:hover:not(:disabled) {
+            color: var(--text-primary);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="titlebar">
+        <div class="titlebar-title">
+            <span>⚡ FlowHub 更新</span>
+        </div>
+        <div class="titlebar-controls">
+            <button class="titlebar-button" onclick="closeWindow()">×</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="header">
+            <div class="logo">⚡</div>
+            <div class="title">发现新版本</div>
+            <div class="version-info">
+                当前版本: <span class="current" id="currentVersion">V0.1</span> | 
+                最新版本: <span class="latest" id="latestVersion">V0.2</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">📝 更新说明</div>
+            <div class="release-notes" id="releaseNotes">
+                正在加载更新说明...
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="download-info" id="downloadInfo">
+                <div class="download-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progressText">0%</span>
+                        <span id="speedText">0 KB/s</span>
+                    </div>
+                </div>
+                <div class="download-details">
+                    <span>📦 <span id="downloadedSize">0 MB</span> / <span id="totalSize">0 MB</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="button button-tertiary" onclick="openRepo()" id="repoButton">
+                🌐 打开仓库
+            </button>
+            <button class="button button-secondary" onclick="laterUpdate()" id="laterButton">
+                ⏰ 稍后更新
+            </button>
+            <button class="button button-primary" onclick="downloadAndInstall()" id="installButton">
+                📥 下载安装
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const path = require('path');
+        const fs = require('fs');
+
+        let updateInfo = null;
+        let isDownloading = false;
+
+        // 接收更新信息
+        ipcRenderer.on('update-info', (event, info) => {
+            updateInfo = info;
+            updateUI();
+        });
+
+        // 接收下载进度
+        ipcRenderer.on('download-progress', (event, progress) => {
+            updateDownloadProgress(progress);
+        });
+
+        function updateUI() {
+            if (!updateInfo) return;
+
+            document.getElementById('currentVersion').textContent = `V${updateInfo.currentVersion}`;
+            document.getElementById('latestVersion').textContent = `V${updateInfo.latestVersion}`;
+            document.getElementById('releaseNotes').textContent = updateInfo.releaseNotes || '暂无更新说明';
+            document.getElementById('totalSize').textContent = formatSize(updateInfo.fileSize);
+        }
+
+        function updateDownloadProgress(progress) {
+            document.getElementById('progressFill').style.width = progress.percentage + '%';
+            document.getElementById('progressText').textContent = progress.percentage + '%';
+            document.getElementById('speedText').textContent = formatSpeed(progress.speed);
+            document.getElementById('downloadedSize').textContent = formatSize(progress.current);
+
+            if (progress.percentage >= 100) {
+                // 下载完成
+                document.getElementById('installButton').innerHTML = '✅ 安装完成';
+                document.getElementById('installButton').disabled = true;
+                isDownloading = false;
+            }
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return (bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+        }
+
+        function formatSpeed(bytesPerSecond) {
+            return formatSize(bytesPerSecond) + '/s';
+        }
+
+        function closeWindow() {
+            window.close();
+        }
+
+        function openRepo() {
+            if (updateInfo && updateInfo.releaseUrl) {
+                const { shell } = require('electron');
+                shell.openExternal(updateInfo.releaseUrl);
+            }
+        }
+
+        function laterUpdate() {
+            window.close();
+        }
+
+        async function downloadAndInstall() {
+            if (!updateInfo || !updateInfo.downloadUrl || isDownloading) return;
+
+            isDownloading = true;
+
+            // 显示下载信息
+            document.getElementById('downloadInfo').classList.add('active');
+            document.getElementById('installButton').innerHTML = '<span class="spinner"></span> 下载中...';
+            document.getElementById('installButton').disabled = true;
+            document.getElementById('repoButton').disabled = true;
+            document.getElementById('laterButton').disabled = true;
+
+            try {
+                // 确定下载路径
+                const tempDir = path.join(process.env.TEMP, 'FlowHub');
+                if (!fs.existsSync(tempDir)) {
+                    fs.mkdirSync(tempDir, { recursive: true });
+                }
+
+                const fileName = 'FlowHub-Setup.exe';
+                const filePath = path.join(tempDir, fileName);
+
+                // 开始下载
+                const result = await ipcRenderer.invoke('download-update', updateInfo.downloadUrl, filePath);
+
+                if (result.success) {
+                    // 下载成功，开始安装
+                    document.getElementById('installButton').innerHTML = '<span class="spinner"></span> 安装中...';
+
+                    const installResult = await ipcRenderer.invoke('install-update', filePath);
+
+                    if (installResult.success) {
+                        document.getElementById('installButton').innerHTML = '✅ 正在安装...';
+                        setTimeout(() => {
+                            window.close();
+                        }, 2000);
+                    } else {
+                        alert('安装失败: ' + installResult.error);
+                        resetButtons();
+                    }
+                } else {
+                    alert('下载失败: ' + result.error);
+                    resetButtons();
+                }
+            } catch (error) {
+                console.error('下载安装失败:', error);
+                alert('下载安装失败: ' + error.message);
+                resetButtons();
+            }
+        }
+
+        function resetButtons() {
+            isDownloading = false;
+            document.getElementById('installButton').innerHTML = '📥 下载安装';
+            document.getElementById('installButton').disabled = false;
+            document.getElementById('repoButton').disabled = false;
+            document.getElementById('laterButton').disabled = false;
+        }
+    </script>
+</body>
+</html>

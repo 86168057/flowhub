@@ -1,0 +1,5 @@
+node_modules/
+111/
+截图/
+*.log
+.DS_Store

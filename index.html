@@ -1627,7 +1627,9 @@
 
         // 打开设置
         function openSettings() {
-            alert('设置功能即将推出！\n\n可添加的功能：\n• AI 模型选择\n• 主题切换\n• 字体大小调节\n• 快捷键配置\n• 语言设置');
+            document.getElementById('settingsDialog').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            loadSettings();
         }
 
         // 更新图片预览
@@ -2228,6 +2230,559 @@
             console.error('未处理的Promise错误:', event.reason);
             addOutput('异步操作失败: ' + event.reason, 'error');
         });
+
+        // 打开设置弹窗
+        function openSettings() {
+            document.getElementById('settingsDialog').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            loadSettings();
+        }
+
+        // 隐藏设置弹窗
+        function hideSettings() {
+            document.getElementById('settingsDialog').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // 保存设置
+        function saveSettings() {
+            const settings = {
+                fontSize: document.getElementById('fontSizeSelect').value,
+                theme: document.getElementById('themeSelect').value,
+                autoSave: document.getElementById('autoSaveToggle').checked,
+                showHistory: document.getElementById('showHistoryToggle').checked,
+                thinkingAnimation: document.getElementById('thinkingAnimationToggle').checked
+            };
+
+            localStorage.setItem('flowhub_settings', JSON.stringify(settings));
+            applySettings(settings);
+            hideSettings();
+            addOutput('✓ 设置已保存', 'success');
+        }
+
+        // 加载设置
+        function loadSettings() {
+            const saved = localStorage.getItem('flowhub_settings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                document.getElementById('fontSizeSelect').value = settings.fontSize || '14';
+                document.getElementById('themeSelect').value = settings.theme || 'dark';
+                document.getElementById('autoSaveToggle').checked = settings.autoSave !== false;
+                document.getElementById('showHistoryToggle').checked = settings.showHistory !== false;
+                document.getElementById('thinkingAnimationToggle').checked = settings.thinkingAnimation !== false;
+            }
+        }
+
+        // 应用设置
+        function applySettings(settings) {
+            if (settings.fontSize) {
+                document.body.style.fontSize = settings.fontSize + 'px';
+            }
+            if (settings.theme) {
+                if (settings.theme === 'dark') {
+                    document.body.removeAttribute('data-theme');
+                } else if (settings.theme === 'light') {
+                    document.body.setAttribute('data-theme', 'light');
+                }
+            }
+        }
+
+        // 改变字体大小
+        function changeFontSize(size) {
+            document.body.style.fontSize = size + 'px';
+        }
+
+        // 改变主题
+        function changeTheme(theme) {
+            if (theme === 'dark') {
+                document.body.removeAttribute('data-theme');
+            } else if (theme === 'light') {
+                document.body.setAttribute('data-theme', 'light');
+            }
+        }
+
+        // 切换自动保存
+        function toggleAutoSave(enabled) {
+            console.log('自动保存:', enabled);
+        }
+
+        // 切换历史记录显示
+        function toggleHistory(enabled) {
+            const historyContainer = document.getElementById('historyContainer');
+            if (historyContainer) {
+                historyContainer.style.display = enabled ? 'block' : 'none';
+            }
+        }
+
+        // 切换思考动画
+        function toggleThinkingAnimation(enabled) {
+            console.log('思考动画:', enabled);
+        }
+
+        // 清空命令历史
+        function clearCommandHistory() {
+            commandHistory = [];
+            updateHistoryDisplay();
+            addOutput('✓ 命令历史已清空', 'success');
+        }
+
+        // 重置所有设置
+        function clearAllData() {
+            if (confirm('确定要重置所有设置吗？这将清除所有本地保存的数据。')) {
+                localStorage.clear();
+                addOutput('✓ 所有设置已重置', 'success');
+                hideSettings();
+            }
+        }
+
+        // 打开GitHub仓库
+        function openGitHubRepo() {
+            window.electronAPI.openExternal('https://github.com/86168057/flowhub');
+        }
     </script>
+
+    <!-- 设置弹窗 -->
+    <div id="settingsDialog" class="settings-dialog" style="display: none;">
+        <div class="settings-dialog-overlay"></div>
+        <div class="settings-dialog-content">
+            <div class="settings-dialog-header">
+                <span class="settings-dialog-title">⚡ FlowHub 设置</span>
+                <button class="settings-dialog-close" onclick="hideSettings()">×</button>
+            </div>
+            <div class="settings-dialog-body">
+                <div class="settings-section">
+                    <div class="settings-section-title">外观设置</div>
+                    <div class="settings-item">
+                        <label class="settings-label">字体大小</label>
+                        <select id="fontSizeSelect" class="settings-select" onchange="changeFontSize(this.value)">
+                            <option value="12">小 (12px)</option>
+                            <option value="14" selected>中 (14px)</option>
+                            <option value="16">大 (16px)</option>
+                            <option value="18">特大 (18px)</option>
+                        </select>
+                    </div>
+                    <div class="settings-item">
+                        <label class="settings-label">界面主题</label>
+                        <select id="themeSelect" class="settings-select" onchange="changeTheme(this.value)">
+                            <option value="dark" selected>深色主题</option>
+                            <option value="light">浅色主题</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-section-title">功能设置</div>
+                    <div class="settings-item">
+                        <label class="settings-label">自动保存</label>
+                        <div class="settings-toggle">
+                            <input type="checkbox" id="autoSaveToggle" checked onchange="toggleAutoSave(this.checked)">
+                            <label for="autoSaveToggle" class="toggle-label">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <label class="settings-label">显示命令历史</label>
+                        <div class="settings-toggle">
+                            <input type="checkbox" id="showHistoryToggle" checked onchange="toggleHistory(this.checked)">
+                            <label for="showHistoryToggle" class="toggle-label">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <label class="settings-label">AI 思考动画</label>
+                        <div class="settings-toggle">
+                            <input type="checkbox" id="thinkingAnimationToggle" checked onchange="toggleThinkingAnimation(this.checked)">
+                            <label for="thinkingAnimationToggle" class="toggle-label">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-section-title">数据管理</div>
+                    <button class="settings-button-secondary" onclick="clearCommandHistory()">
+                        🗑️ 清空命令历史
+                    </button>
+                    <button class="settings-button-secondary" onclick="clearAllData()">
+                        🔄 重置所有设置
+                    </button>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-section-title">关于</div>
+                    <div class="settings-about">
+                        <div class="settings-about-content">
+                            <div class="settings-about-logo">
+                                <img src="assets/github-logo.png" alt="GitHub" style="width: 40px; height: auto; background: transparent;">
+                            </div>
+                            <div class="settings-about-info">
+                                <div class="settings-about-name">FlowHub</div>
+                                <div class="settings-about-version">版本 V0.1</div>
+                                <div class="settings-about-desc">iFlow CLI 图形化界面</div>
+                            </div>
+                        </div>
+                        <button class="settings-about-link" onclick="openGitHubRepo()">
+                            🌐 访问 GitHub 仓库
+                        </button>
+                        <button class="settings-button-secondary" onclick="checkForUpdate()" style="margin-top: 8px;">
+                            🔄 检查更新
+                        </button>
+                        <div class="settings-about-url">https://github.com/86168057/flowhub (V0.1)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-dialog-footer">
+                <button class="settings-dialog-btn settings-dialog-btn-save" onclick="saveSettings()">
+                    💾 保存设置
+                </button>
+                <button class="settings-dialog-btn settings-dialog-btn-cancel" onclick="hideSettings()">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 设置弹窗样式 */
+        .settings-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .settings-dialog-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .settings-dialog-content {
+            position: relative;
+            width: 500px;
+            min-width: 400px;
+            max-width: 90vw;
+            max-height: 85vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d46 100%);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                        0 0 0 1px rgba(99, 102, 241, 0.3);
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-dialog-header {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .settings-dialog-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .settings-dialog-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+            line-height: 1;
+        }
+
+        .settings-dialog-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .settings-dialog-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #a5b4fc;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            gap: 16px;
+        }
+
+        .settings-label {
+            font-size: 14px;
+            color: #e0e0e0;
+            flex: 1;
+        }
+
+        .settings-select {
+            flex: 1;
+            max-width: 200px;
+            background: rgba(30, 30, 46, 0.8);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-select:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .settings-select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .settings-select option {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        .settings-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .settings-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-label {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: 0.3s;
+            border-radius: 12px;
+        }
+
+        .toggle-label:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 2px;
+            bottom: 2px;
+            background: #c7d2fe;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .settings-toggle input:checked + .toggle-label {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            border-color: transparent;
+        }
+
+        .settings-toggle input:checked + .toggle-label:before {
+            transform: translateX(20px);
+        }
+
+        .settings-button-secondary {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 6px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #e0e0e0;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-button-secondary:hover {
+            background: rgba(99, 102, 241, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .settings-button-secondary:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-about {
+            background: rgba(30, 30, 46, 0.5);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .settings-about-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .settings-about-logo {
+            flex-shrink: 0;
+        }
+
+        .settings-about-info {
+            flex: 1;
+        }
+
+        .settings-about-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .settings-about-version {
+            font-size: 12px;
+            color: #a5b4fc;
+            margin-bottom: 4px;
+        }
+
+        .settings-about-desc {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .settings-about-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 10px 12px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .settings-about-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .settings-about-url {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: center;
+            word-break: break-all;
+        }
+
+        .settings-dialog-footer {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+            background: rgba(30, 30, 46, 0.5);
+            display: flex;
+            gap: 12px;
+        }
+
+        .settings-dialog-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-dialog-btn-save {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .settings-dialog-btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .settings-dialog-btn-cancel {
+            background: rgba(99, 102, 241, 0.2);
+            color: #e0e0e0;
+        }
+
+        .settings-dialog-btn-cancel:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
 </body>
 </html>

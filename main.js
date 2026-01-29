@@ -22,8 +22,8 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
 
-  // 打开开发者工具
-  mainWindow.webContents.openDevTools();
+  // 打开开发者工具（调试用）- 已关闭以加快启动速度
+  // mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', () => {
     mainWindow = null;
